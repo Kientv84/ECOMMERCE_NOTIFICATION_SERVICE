@@ -1,0 +1,24 @@
+package com.kientv84.notification.dtos.responses.order;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.*;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
+@Setter
+@Getter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
+//@JsonIgnoreProperties(ignoreUnknown = true)
+public class KafkaOrderResponse {
+    private UUID id;
+    private UUID userId;
+    private String orderCode;
+    private UUID paymentMethod;
+    private String shippingAddress;
+    private BigDecimal totalPrice;
+    private List<KafkaOrderItemResponse> items;
+}

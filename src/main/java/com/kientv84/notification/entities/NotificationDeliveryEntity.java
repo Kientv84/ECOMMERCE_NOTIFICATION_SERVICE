@@ -35,8 +35,14 @@ public class NotificationDeliveryEntity {
     @Column(columnDefinition = "TEXT")
     private String errorMessage;
 
-    @Column(nullable = false)
-    private Instant sentAt = Instant.now();
+    // chỉ set khi SENT
+    private Instant sentAt;
+
+    // thêm để phân biệt FAILED
+    private Instant failedAt;
+
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt = Instant.now();
 
 }
 

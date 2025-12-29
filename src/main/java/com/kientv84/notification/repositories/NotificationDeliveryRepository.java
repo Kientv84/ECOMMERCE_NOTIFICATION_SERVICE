@@ -7,41 +7,59 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
-
 public interface NotificationDeliveryRepository
         extends JpaRepository<NotificationDeliveryEntity, UUID> {
 
-    default void saveSuccess(
+    Optional<NotificationDeliveryEntity>
+    findByNotificationIdAndChannel(
+            UUID notificationId,
+            NotificationChannelType channel
+    );
+
+    default void markSuccess(
             UUID notificationId,
             NotificationChannelType channel
     ) {
         NotificationDeliveryEntity entity =
-                new NotificationDeliveryEntity();
+                findByNotificationIdAndChannel(notificationId, channel)
+                        .orElseGet(() -> {
+                            NotificationDeliveryEntity e =
+                                    new NotificationDeliveryEntity();
+                            e.setNotificationId(notificationId);
+                            e.setChannel(channel);
+                            e.setSentAt(Instant.now());
+                            return e;
+                        });
 
-        entity.setNotificationId(notificationId);
-        entity.setChannel(channel);
         entity.setStatus(NotificationStatus.SENT);
         entity.setSentAt(Instant.now());
+        entity.setErrorMessage(null);
 
         save(entity);
     }
 
-    default void saveFailure(
+    default void markFailure(
             UUID notificationId,
             NotificationChannelType channel,
             String errorMessage
     ) {
         NotificationDeliveryEntity entity =
-                new NotificationDeliveryEntity();
+                findByNotificationIdAndChannel(notificationId, channel)
+                        .orElseGet(() -> {
+                            NotificationDeliveryEntity e =
+                                    new NotificationDeliveryEntity();
+                            e.setNotificationId(notificationId);
+                            e.setChannel(channel);
+                            e.setSentAt(Instant.now());
+                            return e;
+                        });
 
-        entity.setNotificationId(notificationId);
-        entity.setChannel(channel);
         entity.setStatus(NotificationStatus.FAILED);
         entity.setErrorMessage(errorMessage);
-        entity.setSentAt(Instant.now());
+        entity.setFailedAt(Instant.now());
 
         save(entity);
     }
 }
-

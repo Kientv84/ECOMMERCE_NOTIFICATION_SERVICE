@@ -8,8 +8,10 @@ import com.kientv84.notification.dtos.responses.order.KafkaOrderResponse;
 import com.kientv84.notification.mappers.OrderCreatedNotificationEventMapper;
 import com.kientv84.notification.services.NotificationService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class OrderCreatedNotificationHandler
@@ -27,6 +29,7 @@ public class OrderCreatedNotificationHandler
     public NotificationEventDTO<?> handle(
             KafkaEvent<KafkaOrderResponse> event
     ) {
+        log.info("handle notification by order message ....");
         // 1. Map KafkaEvent -> NotificationEventDTO
         NotificationEventDTO<?> notificationEvent = mapper.map(event);
 

@@ -14,8 +14,9 @@ public interface OrderCreatedNotificationEventMapper {
     @Mapping(target = "eventType", source = "metadata.eventType")
     @Mapping(target = "source", source = "metadata.source")
     @Mapping(target = "version", source = "metadata.version")
+    @Mapping(target = "locale", source = "metadata.locale")
     // ===== map payload (NESTED) =====
-    @Mapping(target = "payload.userId", source = "payload.userId")
+    @Mapping(target = "userId", source = "payload.userId")
     @Mapping(target = "payload.orderCode", source = "payload.orderCode")
     @Mapping(target = "payload.totalPrice", source = "payload.totalPrice")
     @Mapping(target = "payload.shippingAddress", source = "payload.shippingAddress")

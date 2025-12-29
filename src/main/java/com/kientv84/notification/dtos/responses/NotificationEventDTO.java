@@ -15,6 +15,10 @@ public class NotificationEventDTO<T> {
     private String eventType;
     private String source;
     private int version;
+    private String locale;
+
+
+    private String userId;
     // ===== Data cho template =====
     private T payload;
 }

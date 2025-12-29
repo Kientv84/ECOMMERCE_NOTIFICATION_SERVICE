@@ -15,6 +15,7 @@ public class EventMetadata {
     private String eventType;
     private String source;
     private int version;
+    private String locale;
 }
 
 

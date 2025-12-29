@@ -5,6 +5,7 @@ import com.kientv84.notification.repositories.NotificationEventLogRepository;
 import com.kientv84.notification.services.NotificationEventLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -17,21 +18,22 @@ public class NotificationEventLogServiceImpl implements NotificationEventLogServ
 
     @Override
     public boolean isProcessed(String eventId) {
-        log.info("checking exist eventType ... ");
-        try {
-            return repository.existsById(eventId);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        return repository.existsByEventId(eventId);
     }
 
     @Override
     public void markProcessed(String eventId, String eventType) {
-        NotificationEventLogEntity log = new NotificationEventLogEntity();
-        log.setEventId(eventId);
-        log.setEventType(eventType);
-        log.setProcessedAt(Instant.now());
-
-        repository.save(log);
+        try {
+            repository.save(
+                    NotificationEventLogEntity.builder()
+                            .eventId(eventId)
+                            .eventType(eventType)
+                            .processedAt(Instant.now())
+                            .build()
+            );
+        } catch (DataIntegrityViolationException e) {
+            // event đã được insert bởi consumer khác
+            log.warn("Event {} already marked processed", eventId);
+        }
     }
 }

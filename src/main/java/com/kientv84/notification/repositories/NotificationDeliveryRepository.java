@@ -33,7 +33,7 @@ public interface NotificationDeliveryRepository
                             return e;
                         });
 
-        entity.setStatus(NotificationStatus.SENT);
+        entity.setStatus(NotificationStatus.DELIVERED);
         entity.setSentAt(Instant.now());
         entity.setErrorMessage(null);
 

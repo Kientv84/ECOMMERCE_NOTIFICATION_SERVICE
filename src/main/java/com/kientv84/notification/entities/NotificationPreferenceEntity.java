@@ -7,30 +7,28 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.UUID;
+import java.util.UUID;@Entity
+@Table(
+        name = "notification_preferences",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "channel"})
+)
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
-@Table(name = "notification_preferences",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"userId", "channel"}))
 public class NotificationPreferenceEntity {
 
     @Id
     @GeneratedValue
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     private String userId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private NotificationChannelType channel;
 
     @Column(nullable = false)
     private Boolean enabled = true;
-
-    // getter / setter
 }
-

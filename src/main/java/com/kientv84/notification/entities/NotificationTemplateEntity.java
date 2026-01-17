@@ -7,8 +7,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.UUID;
-@Entity
+import java.util.UUID;@Entity
 @Table(
         name = "notification_templates",
         uniqueConstraints = @UniqueConstraint(
@@ -41,9 +40,9 @@ public class NotificationTemplateEntity {
     @Column(nullable = false)
     private boolean active;
 
-    @Column(nullable = false)
+    @Column(name = "title_template", nullable = false)
     private String titleTemplate;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(name = "content_template", nullable = false, columnDefinition = "TEXT")
     private String contentTemplate;
 }

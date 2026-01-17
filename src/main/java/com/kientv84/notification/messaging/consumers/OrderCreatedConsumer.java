@@ -5,11 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kientv84.notification.commons.EventType;
 import com.kientv84.notification.dispatcher.NotificationEventDispatcher;
 import com.kientv84.notification.dtos.kafkaWrappers.KafkaEvent;
-import com.kientv84.notification.dtos.responses.NotificationEventDTO;
 import com.kientv84.notification.dtos.responses.order.KafkaOrderResponse;
-import com.kientv84.notification.dtos.responses.order.OrderNotificationResponse;
-import com.kientv84.notification.mappers.OrderCreatedNotificationEventMapper;
-import com.kientv84.notification.services.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -19,7 +15,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 @Service
 @Slf4j
-public class NotificationConsumer {
+public class OrderCreatedConsumer {
     private final ObjectMapper objectMapper;
     private final NotificationEventDispatcher dispatcher;
 

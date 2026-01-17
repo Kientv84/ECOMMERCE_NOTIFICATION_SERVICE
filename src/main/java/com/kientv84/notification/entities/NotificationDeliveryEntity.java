@@ -9,40 +9,38 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
-import java.util.UUID;
+import java.util.UUID;@Entity
+@Table(name = "notification_deliveries")
 @Getter
 @Setter
 @AllArgsConstructor
-@Entity
 @NoArgsConstructor
-@Table(name = "notification_deliveries")
 public class NotificationDeliveryEntity {
+
     @Id
     @GeneratedValue
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(name = "notification_id", nullable = false)
     private UUID notificationId;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private NotificationChannelType channel;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 20)
     private NotificationStatus status;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "error_message", columnDefinition = "TEXT")
     private String errorMessage;
 
-    // chỉ set khi SENT
+    @Column(name = "sent_at")
     private Instant sentAt;
 
-    // thêm để phân biệt FAILED
+    @Column(name = "failed_at")
     private Instant failedAt;
 
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
-
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
 }
-

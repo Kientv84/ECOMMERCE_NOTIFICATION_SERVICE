@@ -9,6 +9,8 @@ import com.kientv84.notification.repositories.NotificationDeliveryRepository;
 import com.kientv84.notification.repositories.NotificationRepository;
 import com.kientv84.notification.services.*;
 import com.kientv84.notification.utils.NotificationChannelType;
+import com.kientv84.notification.utils.NotificationStatus;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,6 +30,7 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final NotificationDeliveryRepository deliveryRepository;
 
+    @Transactional
     @Override
     public void handleEvent(NotificationEventDTO<?> event) {
         String eventId = event.getEventId();
@@ -35,79 +38,103 @@ public class NotificationServiceImpl implements NotificationService {
         String userId = event.getUserId();
         String locale = event.getLocale() != null ? event.getLocale() : "vi";
 
-        // 1. Idempotency
+        log.info(
+                "[Notification] Start processing eventId={} eventType={} userId={} locale={}",
+                eventId, eventType, userId, locale
+        );
+
+        // 1. Idempotency (event-level)
         if (eventLogService.isProcessed(eventId)) {
-            log.info("[Notification] Event {} already processed", eventId);
+            log.warn(
+                    "[Notification] Event {} already processed, skip",
+                    eventId
+            );
             return;
         }
 
-        // 2. Persist base notification (event-level)
-        NotificationEntity notification = notificationRepository.save(
-                NotificationEntity.builder()
-                        .eventId(eventId)
-                        .eventType(eventType)
-                        .userId(userId)
-                        .build()
-        );
-
-        // 3. Resolve enabled channels
-        List<NotificationChannelType> channels =
+        // 2. Load enabled channels
+        List<NotificationChannelType> enabledChannels =
                 referenceService.getEnabledChannels(userId);
 
-        // 4. Fan-out per channel
-        for (NotificationChannelType channel : channels) {
+        log.info(
+                "[Notification] Enabled channels for user {}: {}",
+                userId, enabledChannels
+        );
+
+        if (enabledChannels.isEmpty()) {
+            log.warn(
+                    "[Notification] User {} has no enabled channels, mark event {} as processed",
+                    userId, eventId
+            );
+            eventLogService.markProcessed(eventId, eventType);
+            return;
+        }
+
+        // 3. Process per channel
+        for (NotificationChannelType channel : enabledChannels) {
+
+            log.info(
+                    "[Notification] Processing channel={} for eventId={}",
+                    channel, eventId
+            );
+
             try {
-                // 4.1 Load template per channel
+                // 3.1 Load template
                 NotificationTemplateEntity template =
-                        templateService.getTemplate(
-                                eventType,
-                                channel,
-                                locale
-                        );
+                        templateService.getTemplate(eventType, channel, locale);
 
-                // 4.2 Render (sau có thể dùng engine)
-                String title = template.getTitleTemplate();
-                String content = template.getContentTemplate();
-
-                // 4.3 Send
-                NotificationSenderService sender =
-                        senderResolver.resolve(channel);
-
-                sender.send(
-                        NotificationSendResponse.builder()
-                                .notificationId(notification.getId())
-                                .eventId(eventId)
-                                .eventType(eventType)
-                                .userId(userId)
-                                .channel(channel)
-                                .title(title)
-                                .content(content)
-                                .build()
+                log.debug(
+                        "[Notification] Loaded template: eventType={} channel={} locale={} version={}",
+                        eventType, channel, locale, template.getVersion()
                 );
 
-                // 4.4 Persist success
+                // 3.2 Persist notification
+                NotificationEntity notification =
+                        notificationRepository.save(
+                                NotificationEntity.builder()
+                                        .eventId(eventId)
+                                        .eventType(eventType)
+                                        .userId(userId)
+                                        .title(template.getTitleTemplate())
+                                        .content(template.getContentTemplate())
+                                        .channel(channel)
+                                        .status(NotificationStatus.DELIVERED)
+                                        .locale(locale)
+                                        .read(false)
+                                        .build()
+                        );
+
+                log.info(
+                        "[Notification] Notification saved: notificationId={} channel={}",
+                        notification.getId(), channel
+                );
+
+                // 3.3 Mark delivery success
                 deliveryRepository.markSuccess(
                         notification.getId(),
                         channel
                 );
 
-            } catch (Exception ex) {
-                log.error(
-                        "[Notification] Failed event={} channel={}",
-                        eventId, channel, ex
+                log.info(
+                        "[Notification] Delivery marked SUCCESS: notificationId={} channel={}",
+                        notification.getId(), channel
                 );
 
-                // Persist failure
-                deliveryRepository.markFailure(
-                        notification.getId(),
-                        channel,
-                        ex.getMessage()
+            } catch (Exception ex) {
+                log.error(
+                        "[Notification] Failed processing eventId={} channel={} error={}",
+                        eventId, channel, ex.getMessage(), ex
                 );
             }
         }
 
-        // 5. Mark processed
+        // 4. Mark event processed
         eventLogService.markProcessed(eventId, eventType);
+
+        log.info(
+                "[Notification] Finished processing eventId={} eventType={}",
+                eventId, eventType
+        );
     }
 }
 
@@ -117,3 +144,4 @@ public class NotificationServiceImpl implements NotificationService {
 //Nếu event chưa từng xử lý, service sẽ load template tương ứng với eventType, render nội dung thông báo, lưu notification vào database.
 //Sau đó, hệ thống truy vấn user preference để xác định các kênh được bật (email, push, sms…), fan-out gửi notification theo từng kênh và lưu trạng thái delivery cho từng channel.
 //Cuối cùng, event được đánh dấu là đã xử lý để đảm bảo không bị xử lý lại trong trường hợp consumer retry.
+

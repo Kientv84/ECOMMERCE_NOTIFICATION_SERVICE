@@ -13,26 +13,26 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.UUID;
-
 @Entity
+@Table(name = "notifications")
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Table(name = "notifications")
 public class NotificationEntity {
+
     @Id
     @GeneratedValue
     private UUID id;
 
-    @Column(nullable = false)
+    @Column(name = "user_id", nullable = false)
     private String userId;
 
-    @Column(nullable = false, unique = true)
+    @Column(name = "event_id", nullable = false, unique = true)
     private String eventId;
 
-    @Column(nullable = false)
+    @Column(name = "event_type", nullable = false)
     private String eventType;
 
     @Column(nullable = false)
@@ -41,7 +41,20 @@ public class NotificationEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(nullable = false, updatable = false)
-    private Instant createdAt = Instant.now();
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private Instant createdAt;
 
+    @Column(nullable = false)
+    private Boolean read = false;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private NotificationChannelType channel;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private NotificationStatus status;
+
+    @Column(nullable = false, length = 5)
+    private String locale;
 }

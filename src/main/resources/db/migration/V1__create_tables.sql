@@ -85,31 +85,16 @@ CREATE TABLE notification_templates (
 CREATE INDEX idx_templates_lookup
     ON notification_templates(event_type, channel, locale, active);
 
---------------------------------------------------
--- 6. Seed notification_preferences for existing users
---------------------------------------------------
-INSERT INTO notification_preferences (user_id, channel, enabled)
-SELECT
-    u.user_id,
-    c.channel,
-    true
-FROM (
-    VALUES
-        ('USER001'),
-        ('USER002'),
-        ('USER003'),
-        ('USER004'),
-        ('USER005'),
-        ('USER006'),
-        ('USER007'),
-        ('USER008'),
-        ('USER009'),
-        ('USER010'),
-        ('USER011')
-) AS u(user_id)
-CROSS JOIN (
-    VALUES
-        ('IN_APP'),
-        ('EMAIL')
-) AS c(channel)
-ON CONFLICT (user_id, channel) DO NOTHING;
+
+CREATE TABLE notification_event_policy (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    event_type VARCHAR(50) NOT NULL,
+    channel VARCHAR(20) NOT NULL,
+
+    mandatory BOOLEAN NOT NULL,
+    description VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT uq_event_channel UNIQUE (event_type, channel)
+);
